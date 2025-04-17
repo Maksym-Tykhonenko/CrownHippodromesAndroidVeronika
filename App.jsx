@@ -553,7 +553,7 @@ const App = () => {
     const checkUrl = `${INITIAL_URL}${URL_IDENTIFAIRE}`;
     //console.log(checkUrl);
 
-    const targetData = new Date('2025-04-15T15:00:00'); //дата з якої поч працювати webView
+    const targetData = new Date('2025-04-18T15:00:00'); //дата з якої поч працювати webView
     const currentData = new Date(); //текущая дата
 
     if (!route) {
@@ -582,25 +582,31 @@ const App = () => {
   const generateLink = async () => {
     try {
       // Створення базової частини лінки
-      let baseUrl = `${INITIAL_URL}${URL_IDENTIFAIRE}?${URL_IDENTIFAIRE}=1&idfa=${idfa}&uid=${appsUid}&customerUserId=${customerUserId}&idfv=${idfv}&oneSignalId=${oneSignalId}&jthrhg=${timeStampUserId}`;
+      let baseUrl = `${INITIAL_URL}${URL_IDENTIFAIRE}?${URL_IDENTIFAIRE}=1&idfa=${idfa}&uid=${appsUid}&customerUserId=${customerUserId}&idfv=${idfv}${oneSignalId ? `&oneSignalId=${oneSignalId}` : ''
+        }&jthrhg=${timeStampUserId}`;
 
       // Логіка обробки sab1
       let additionalParams = '';
 
       if (sab1) {
         if (sab1.includes('_')) {
-          //console.log('Якщо sab1 містить "_", розбиваємо та формуємо subId');
-          // Якщо sab1 містить "_", розбиваємо і формуємо subId
-          // NON-ORGANIC
-
           let sabParts = sab1.split('_');
-          additionalParams =
-            sabParts
-              .map((part, index) => `subId${index + 1}=${part}`)
-              .join('&') +
-            `&testParam=NON-ORGANIC&af_siteid=${afSiteid}&af_ad=${afAd}&media_source=${mediaSource}&af_channel=${afChannel}&checkData=${checkApsData}`;
-          //testParam = `testParam=NON-ORGANIC`;
-          //Alert.alert(additionalParams);
+          let subIdParams = sabParts
+            .map((part, index) => `subId${index + 1}=${part}`)
+            .join('&');
+
+          // Динамічне формування додаткових параметрів
+          const optionalParams = [];
+
+          if (afSiteid) optionalParams.push(`af_siteid=${afSiteid}`);
+          if (afAd) optionalParams.push(`af_ad=${afAd}`);
+          if (mediaSource) optionalParams.push(`media_source=${mediaSource}`);
+          if (afChannel) optionalParams.push(`af_channel=${afChannel}`);
+          if (checkApsData) optionalParams.push(`checkData=${checkApsData}`);
+
+          // Формуємо final additionalParams
+          additionalParams = `${subIdParams}&testParam=NON-ORGANIC${optionalParams.length ? `&${optionalParams.join('&')}` : ''
+            }`;
         } else {
           //console.log('sab1 === Organic, передаємо subId1 пустий + ОРГАНІК');
           // Якщо sab1 не містить "_", встановлюємо subId1=sab1
@@ -624,9 +630,8 @@ const App = () => {
       }
       console.log('additionalParams====>', additionalParams);
       // Формування фінального лінку
-      const product = `${baseUrl}&${additionalParams}${
-        pushOpenWebview ? `&yhugh=${pushOpenWebview}` : ''
-      }`;
+      const product = `${baseUrl}&${additionalParams}${pushOpenWebview ? `&yhugh=${pushOpenWebview}` : ''
+        }`;
       {
         /**const product = `${baseUrl}&${testParam}${isOrganic ? '' : `&${additionalParams}`}${
                         pushOpenWebview ? `&yhugh=${pushOpenWebview}` : ''
